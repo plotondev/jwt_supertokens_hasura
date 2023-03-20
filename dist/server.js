@@ -18,10 +18,12 @@ const supertokens_node_1 = __importDefault(require("supertokens-node"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const config_1 = require("./config");
 const express_actuator_1 = __importDefault(require("express-actuator"));
+const morgan_1 = __importDefault(require("morgan"));
 dotenv_1.default.config();
 supertokens_node_1.default.init((0, config_1.backendConfig)());
 const app = (0, express_1.default)();
 app.use((0, express_2.middleware)());
+app.use((0, morgan_1.default)('combined'));
 app.use((0, express_actuator_1.default)());
 const port = process.env.PORT;
 const server = app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {

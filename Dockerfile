@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM --platform=linux/amd64 node:16-alpine
 WORKDIR /usr/src/app
 
 COPY package*.json ./
