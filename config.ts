@@ -4,19 +4,19 @@ import SessionNode from "supertokens-node/recipe/session"
 import Dashboard from "supertokens-node/recipe/dashboard"
 import UserMetadata from "supertokens-node/recipe/usermetadata"
 import { google } from 'googleapis'
-import { AuthConfig } from "./interfaces";
-const port = process.env.APP_PORT || 3000;
+import { AuthConfig } from "./interfaces"
+const port = process.env.APP_PORT || 3000
 
-const apiBasePath = "/api/";
+const apiBasePath = "/api/"
 
-export const websiteDomain = process.env.APP_URL || `http://localhost:${port}`;
+export const websiteDomain = process.env.APP_URL || `http://localhost:${port}`
 
 export const appInfo = {
     appName: "CareToCall",
     websiteDomain,
     apiDomain: websiteDomain,
     apiBasePath,
-};
+}
 
 export const backendConfig = (): AuthConfig => {
     let OAuth2 = google.auth.OAuth2
@@ -121,11 +121,11 @@ export const backendConfig = (): AuthConfig => {
                                         "x-hasura-default-role": "user",
                                         "x-hasura-allowed-roles": ["user"],
                                     }
-                                };
+                                }
     
-                                return originalImplementation.createNewSession(input);
+                                return originalImplementation.createNewSession(input)
                             },
-                        };
+                        }
                     }
                 },
             }),
