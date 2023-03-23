@@ -5,11 +5,9 @@ import Dashboard from "supertokens-node/recipe/dashboard"
 import UserMetadata from "supertokens-node/recipe/usermetadata"
 import { google } from 'googleapis'
 import { AuthConfig } from "./interfaces"
-const port = process.env.APP_PORT || 3000
-
 const apiBasePath = "/api/"
 
-export const websiteDomain = process.env.APP_URL || `http://localhost:${port}`
+export const websiteDomain = process.env.APP_URL!
 
 export const appInfo = {
     appName: "CareToCall",
@@ -106,6 +104,7 @@ export const backendConfig = (): AuthConfig => {
                 flowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
             }),
             SessionNode.init({
+                getTokenTransferMethod: () => "header",
                 jwt: {
                     enable: true,
                 },
@@ -129,6 +128,7 @@ export const backendConfig = (): AuthConfig => {
                     }
                 },
             }),
+            
             UserMetadata.init({}),
             Dashboard.init({
                 apiKey: process.env.SUPERTOKENS_API_KEY || "",

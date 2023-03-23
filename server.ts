@@ -13,7 +13,7 @@ SuperTokens.init(backendConfig())
 const app = express()
 app.use(
     cors({
-      origin: process.env.ALLOWED_CORS_ORIGINS!,
+      origin: process.env.APP_URL!,
       allowedHeaders: ["content-type", ...SuperTokens.getAllCORSHeaders()],
       methods: ["GET", "PUT", "POST", "DELETE"],
       credentials: true,
