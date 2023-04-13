@@ -8,9 +8,10 @@ import { AuthConfig } from "./interfaces";
 const apiBasePath = "/api/";
 
 export const websiteDomain = process.env.APP_URL!;
+const appName = process.env.APP_NAME || "Project Ploton";
 
 export const appInfo = {
-  appName: "CareToCall",
+  appName: appName,
   websiteDomain,
   apiDomain: websiteDomain,
   apiBasePath,
