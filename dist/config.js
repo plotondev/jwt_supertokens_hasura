@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backendConfig = exports.appInfo = exports.websiteDomain = void 0;
+exports.backendConfig = void 0;
 const thirdpartypasswordless_1 = __importDefault(require("supertokens-node/recipe/thirdpartypasswordless"));
 const emaildelivery_1 = require("supertokens-node/recipe/thirdpartypasswordless/emaildelivery");
 const session_1 = __importDefault(require("supertokens-node/recipe/session"));
@@ -20,15 +20,15 @@ const dashboard_1 = __importDefault(require("supertokens-node/recipe/dashboard")
 const usermetadata_1 = __importDefault(require("supertokens-node/recipe/usermetadata"));
 const googleapis_1 = require("googleapis");
 const apiBasePath = "/api/";
-exports.websiteDomain = process.env.APP_URL;
-const appName = process.env.APP_NAME || "Project Ploton";
-exports.appInfo = {
-    appName: appName,
-    websiteDomain: exports.websiteDomain,
-    apiDomain: exports.websiteDomain,
-    apiBasePath,
-};
 const backendConfig = () => {
+    const websiteDomain = process.env.APP_URL;
+    const appName = process.env.APP_NAME || "Project Ploton";
+    const appInfo = {
+        appName: appName,
+        websiteDomain,
+        apiDomain: websiteDomain,
+        apiBasePath,
+    };
     let OAuth2 = googleapis_1.google.auth.OAuth2;
     let oauth2Client = new OAuth2();
     return {
@@ -38,7 +38,8 @@ const backendConfig = () => {
             connectionURI: process.env.SUPERTOKENS_CORE_URI || "http://localhost:3567",
             apiKey: process.env.SUPERTOKENS_API_KEY || "",
         },
-        appInfo: exports.appInfo,
+        enableDebugLogs: true,
+        appInfo,
         // recipeList contains all the modules that you want to
         // use from SuperTokens. See the full list here: https://supertokens.com/docs/guides
         recipeList: [

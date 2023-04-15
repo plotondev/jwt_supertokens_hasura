@@ -7,17 +7,17 @@ import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 const apiBasePath = "/api/";
 
-export const websiteDomain = process.env.APP_URL!;
-const appName = process.env.APP_NAME || "Project Ploton";
-
-export const appInfo = {
-  appName: appName,
-  websiteDomain,
-  apiDomain: websiteDomain,
-  apiBasePath,
-};
-
 export const backendConfig = (): AuthConfig => {
+  const websiteDomain = process.env.APP_URL!;
+  const appName = process.env.APP_NAME || "Project Ploton";
+
+  const appInfo = {
+    appName: appName,
+    websiteDomain,
+    apiDomain: websiteDomain,
+    apiBasePath,
+  };
+
   let OAuth2 = google.auth.OAuth2;
   let oauth2Client = new OAuth2();
   return {
@@ -28,6 +28,7 @@ export const backendConfig = (): AuthConfig => {
         process.env.SUPERTOKENS_CORE_URI || "http://localhost:3567",
       apiKey: process.env.SUPERTOKENS_API_KEY || "",
     },
+    enableDebugLogs: true,
     appInfo,
     // recipeList contains all the modules that you want to
     // use from SuperTokens. See the full list here: https://supertokens.com/docs/guides
