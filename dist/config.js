@@ -19,11 +19,11 @@ const session_1 = __importDefault(require("supertokens-node/recipe/session"));
 const dashboard_1 = __importDefault(require("supertokens-node/recipe/dashboard"));
 const usermetadata_1 = __importDefault(require("supertokens-node/recipe/usermetadata"));
 const googleapis_1 = require("googleapis");
-const port = process.env.APP_PORT || 3000;
 const apiBasePath = "/api/";
-exports.websiteDomain = process.env.APP_URL || `http://localhost:${port}`;
+exports.websiteDomain = process.env.APP_URL;
+const appName = process.env.APP_NAME || "Project Ploton";
 exports.appInfo = {
-    appName: "CareToCall",
+    appName: appName,
     websiteDomain: exports.websiteDomain,
     apiDomain: exports.websiteDomain,
     apiBasePath,
@@ -46,19 +46,45 @@ const backendConfig = () => {
                 emailDelivery: {
                     service: new emaildelivery_1.SMTPService({
                         smtpSettings: {
-                            host: process.env.SMTP_HOST || '',
-                            authUsername: process.env.SMTP_USER || '',
-                            password: process.env.SMTP_PASS || '',
+                            host: process.env.SMTP_HOST || "",
+                            authUsername: process.env.SMTP_USER || "",
+                            password: process.env.SMTP_PASS || "",
                             port: +(process.env.SMTP_PORT || 587),
                             from: {
-                                name: process.env.SMTP_FROM_NAME || 'CareToCall Development',
-                                email: process.env.SMTP_FROM_EMAIL || 'info@caretocall.com',
+                                name: process.env.SMTP_FROM_NAME || "CareToCall Development",
+                                email: process.env.SMTP_FROM_EMAIL || "info@caretocall.com",
                             },
-                            secure: false
+                            secure: false,
                         },
-                    })
+                    }),
                 },
                 override: {
+                    functions: (originalImplementation) => {
+                        return Object.assign(Object.assign({}, originalImplementation), { consumeCode: function (input) {
+                                return __awaiter(this, void 0, void 0, function* () {
+                                    let resp = yield originalImplementation.consumeCode(input);
+                                    if (resp.status === "OK" && resp.createdNewUser) {
+                                        /*
+                                         * This is called during the consume code API,
+                                         * but before calling the createNewSession function.
+                                         * At the start of the API, we do not know if it will result in a
+                                         * sign in or a sign up, so we cannot override the API function.
+                                         * Instead, we override the recipe function as shown here,
+                                         * and then set the relevant context only if it's a new user.
+                                         */
+                                        /*
+                                         * by default, the userContext Dict is {},
+                                         * we change it to {isSignUp: true}, since this is called in the
+                                         * sign up API, and this will tell the create_new_session function
+                                         * (which will be called next)
+                                         * to not create a new session in case input.userContext.isSignUp == true
+                                         */
+                                        input.userContext.isSignUp = true;
+                                    }
+                                    return resp;
+                                });
+                            } });
+                    },
                     apis: (originalImplementation) => {
                         return Object.assign(Object.assign({}, originalImplementation), { 
                             // we override the thirdparty sign in / up API
@@ -76,14 +102,20 @@ const backendConfig = () => {
                                         oauth2Client.setCredentials({ access_token: accessToken });
                                         var oauth2 = googleapis_1.google.oauth2({
                                             auth: oauth2Client,
-                                            version: 'v2'
+                                            version: "v2",
                                         });
                                         oauth2.userinfo.get(function (err, res) {
                                             if (err) {
                                                 console.log(err);
                                             }
                                             else {
-                                                usermetadata_1.default.updateUserMetadata(userId, { first_name: res === null || res === void 0 ? void 0 : res.data.given_name, last_name: res === null || res === void 0 ? void 0 : res.data.family_name, picture: res === null || res === void 0 ? void 0 : res.data.picture, name: res === null || res === void 0 ? void 0 : res.data.name });
+                                                usermetadata_1.default.updateUserMetadata(userId, {
+                                                    first_name: res === null || res === void 0 ? void 0 : res.data.given_name,
+                                                    last_name: res === null || res === void 0 ? void 0 : res.data.family_name,
+                                                    picture: res === null || res === void 0 ? void 0 : res.data.picture,
+                                                    name: res === null || res === void 0 ? void 0 : res.data.name,
+                                                    email: res === null || res === void 0 ? void 0 : res.data.email,
+                                                });
                                             }
                                         });
                                         // TODO: ...
@@ -91,7 +123,7 @@ const backendConfig = () => {
                                     return response;
                                 });
                             } });
-                    }
+                    },
                 },
                 providers: [
                     // We have provided you with development keys which you can use for testing.
@@ -106,6 +138,7 @@ const backendConfig = () => {
                 flowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
             }),
             session_1.default.init({
+                getTokenTransferMethod: () => "header",
                 jwt: {
                     enable: true,
                 },
@@ -121,7 +154,7 @@ const backendConfig = () => {
                                     return originalImplementation.createNewSession(input);
                                 });
                             } });
-                    }
+                    },
                 },
             }),
             usermetadata_1.default.init({}),
