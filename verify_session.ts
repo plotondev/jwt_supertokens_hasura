@@ -6,7 +6,9 @@ export const verifySession = () => {
 
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.headers.authorization) {
-      return res.status(401).send("Authorization header is required");
+      return res
+        .status(401)
+        .send({ success: false, message: "Authorization header is required" });
     }
 
     const token = req.headers.authorization.split(" ")[1];
@@ -19,7 +21,7 @@ export const verifySession = () => {
       next();
     } catch (error) {
       console.error(error);
-      return res.status(401).send("Invalid token");
+      return res.status(401).send({ success: false, message: "Invalid token" });
     }
   };
 };

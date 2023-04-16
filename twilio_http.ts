@@ -17,25 +17,25 @@ const graphqlServer = process.env.GRAPHQL_SERVER!;
 //which is coming form graphql.
 export const setNumber = () => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.headers.authorization) {
-      return res.status(401).send("Authorization header is required");
-    }
-
     const userID = req.user;
     let verificationType: string = req.body.verificationType;
     if (verificationType === undefined || verificationType === null) {
-      return res.status(400).send("verificationType is required");
+      return res
+        .status(400)
+        .send({ success: false, message: "verificationType is required" });
     } else {
       if (verificationType !== "mobile" && verificationType !== "landline") {
-        return res.status(400).send("verificationType is invalid");
+        return res
+          .status(400)
+          .send({ success: false, message: "verificationType is invalid" });
       }
     }
     if (graphqlServer === undefined || userID === undefined)
-      return res.send(500);
+      return res.status(500).send({ success: false, message: "Server error" });
 
     const graphQLClient = new GraphQLClient(graphqlServer, {
       headers: {
-        authorization: req.headers.authorization,
+        authorization: req.headers.authorization!,
       },
     });
     const query = gql`
@@ -54,7 +54,9 @@ export const setNumber = () => {
       }
       const number = results.c2c_user_profile_by_pk.number;
       if (number === null) {
-        return res.status(404).send("Number not found");
+        return res
+          .status(404)
+          .send({ success: false, message: "Number not found" });
       }
       req.number = number;
       req.verificationType = verificationType;
@@ -74,7 +76,9 @@ export const initiateCall = () => {
 
     const extension = process.env.TWILIO_COUNTRY_EXTENSION;
     if (!number || !extension) {
-      return res.status(400).send("Number and extension are required");
+      return res
+        .status(400)
+        .send({ success: false, message: "Number and extension are required" });
     }
     try {
       const TwilioClient = new Twilio(accountSid, authToken);
@@ -85,10 +89,15 @@ export const initiateCall = () => {
           channel: "call",
         });
       console.log(verification);
-      return res.status(200).send("Verification call sent successfully");
+      return res.status(200).send({
+        success: true,
+        message: "Verification call sent successfully",
+      });
     } catch (error) {
       console.log(error);
-      return res.status(500).send("Error sending verification call");
+      return res
+        .status(500)
+        .send({ success: false, message: "Error sending verification call" });
     }
   };
 };
@@ -109,11 +118,11 @@ export const verifyCode = () => {
       !verificationType ||
       !userID
     ) {
-      return res
-        .status(400)
-        .send(
-          "userID, Extension, Number , code , adminKey and verificationType are required"
-        );
+      return res.status(400).send({
+        success: false,
+        message:
+          "Number, extension, code, adminKey, verificationType and userID are required",
+      });
     }
     const TwilioClient = new Twilio(accountSid, authToken);
     await TwilioClient.verify.v2
