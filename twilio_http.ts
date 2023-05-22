@@ -64,7 +64,7 @@ export const setNumber = () => {
       // Handle successful response
     } catch (error) {
       console.log(error);
-      res.send(500);
+      res.status(400).send({ success: false, message: "Server error" });
       // Handle error
     }
   };
@@ -95,9 +95,11 @@ export const initiateCall = () => {
       });
     } catch (error) {
       console.log(error);
-      return res
-        .status(500)
-        .send({ success: false, message: "Error sending verification call" });
+      return res.status(400).send({
+        success: false,
+        message: "Error sending verification call",
+        debug: error,
+      });
     }
   };
 };
@@ -177,7 +179,7 @@ export const verifyCode = () => {
 
           return;
         } else {
-          res.status(401);
+          res.status(400);
           res.send({
             success: false,
             message: "Incorrect token.",

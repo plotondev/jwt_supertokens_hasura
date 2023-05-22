@@ -21,6 +21,7 @@
     "googleapis": "^113.0.0",
     "graphql-request": "^6.0.0",
     "jsonwebtoken": "^9.0.0",
+    "node-mailjet": "^6.0.2",
     "supertokens-node": "^13.1.5",
     "twilio": "^4.10.0"
   },

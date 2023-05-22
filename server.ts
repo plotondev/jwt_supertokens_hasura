@@ -6,7 +6,7 @@ import {
 import SuperTokens from "supertokens-node";
 import { verifySession } from "./verify_session";
 import dotenv from "dotenv";
-import { backendConfig } from "./config";
+import { backendConfig } from "./supertokens_config";
 import actuator from "express-actuator";
 import morgon from "morgan";
 import cors from "cors";

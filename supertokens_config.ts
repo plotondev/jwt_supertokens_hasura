@@ -5,6 +5,7 @@ import Dashboard from "supertokens-node/recipe/dashboard";
 import UserMetadata from "supertokens-node/recipe/usermetadata";
 import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
+import Mailjet from "node-mailjet";
 const apiBasePath = "/api/";
 
 export const backendConfig = (): AuthConfig => {
@@ -54,6 +55,23 @@ export const backendConfig = (): AuthConfig => {
           functions: (originalImplementation) => {
             return {
               ...originalImplementation,
+              sendEmail: async function ({
+                codeLifetime, // amount of time the code is alive for (in MS)
+                email, //user email
+                urlWithLinkCode, // magic link
+                userInputCode, // OTP
+              }: {
+                codeLifetime: number;
+                email: string;
+                urlWithLinkCode: string;
+                userInputCode: string;
+              }) {
+                // TODO: create and send email
+                console.log(codeLifetime);
+                console.log(email);
+                console.log(urlWithLinkCode);
+                console.log(userInputCode);
+              },
               consumeCode: async function (input) {
                 let resp = await originalImplementation.consumeCode(input);
                 if (resp.status === "OK" && resp.createdNewUser) {
@@ -118,7 +136,13 @@ export const backendConfig = (): AuthConfig => {
                       });
                     }
                   });
-
+                  if (input.userContext.isSignUp) {
+                    const mailjet = new Mailjet({
+                      apiKey: process.env.SMTP_USER || "your-api-key",
+                      apiSecret: process.env.SMTP_PASS || "your-api-secret",
+                    });
+                    mailjet.post;
+                  }
                   // TODO: ...
                 }
 

@@ -13,6 +13,6 @@ export interface AuthConfig {
     apiBasePath: string;
   };
   enableDebugLogs: boolean;
-  recipeList: any;
+  recipeList: Array<RecipeListFunction>;
   isInServerlessEnv: boolean;
 }
