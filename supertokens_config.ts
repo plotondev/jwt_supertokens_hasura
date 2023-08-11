@@ -1,22 +1,19 @@
-import ThirdPartyPasswordlessNode from "supertokens-node/recipe/thirdpartypasswordless";
+import ThirdPartyPasswordless from "supertokens-node/recipe/thirdpartypasswordless";
 import { SMTPService } from "supertokens-node/recipe/thirdpartypasswordless/emaildelivery";
-import SessionNode from "supertokens-node/recipe/session";
+import Session from "supertokens-node/recipe/session";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import UserMetadata from "supertokens-node/recipe/usermetadata";
+import UserRoles from "supertokens-node/recipe/userroles";
 import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 import Mailjet from "node-mailjet";
-const apiBasePath = "/api/";
 
 export const backendConfig = (): AuthConfig => {
-  const websiteDomain = process.env.APP_URL!;
-  const appName = process.env.APP_NAME || "Project Ploton";
-
   const appInfo = {
-    appName: appName,
-    websiteDomain,
-    apiDomain: websiteDomain,
-    apiBasePath,
+    appName: process.env.APP_NAME!,
+    websiteDomain: process.env.APP_URL!,
+    apiDomain: process.env.APP_URL!,
+    apiBasePath: "/api/",
   };
 
   let OAuth2 = google.auth.OAuth2;
@@ -25,16 +22,15 @@ export const backendConfig = (): AuthConfig => {
     framework: "express",
     supertokens: {
       // this is the location of the SuperTokens core.
-      connectionURI:
-        process.env.SUPERTOKENS_CORE_URI || "http://localhost:3567",
-      apiKey: process.env.SUPERTOKENS_API_KEY || "",
+      connectionURI: process.env.SUPERTOKENS_CORE_URI!,
+      apiKey: process.env.SUPERTOKENS_API_KEY!,
     },
     enableDebugLogs: true,
     appInfo,
     // recipeList contains all the modules that you want to
     // use from SuperTokens. See the full list here: https://supertokens.com/docs/guides
     recipeList: [
-      ThirdPartyPasswordlessNode.init({
+      ThirdPartyPasswordless.init({
         emailDelivery: {
           service: new SMTPService({
             smtpSettings: {
@@ -44,8 +40,8 @@ export const backendConfig = (): AuthConfig => {
               port: +(process.env.SMTP_PORT || 587),
 
               from: {
-                name: process.env.SMTP_FROM_NAME || "CareToCall Development",
-                email: process.env.SMTP_FROM_EMAIL || "info@caretocall.com",
+                name: process.env.SMTP_FROM_NAME!,
+                email: process.env.SMTP_FROM_EMAIL!,
               },
               secure: false,
             },
@@ -116,7 +112,7 @@ export const backendConfig = (): AuthConfig => {
                 if (response.status === "OK") {
                   // In this example we are using Google as our provider
 
-                  let accessToken = response.authCodeResponse.access_token;
+                  let accessToken = response.oAuthTokens.access_token;
                   let userId = response.user.id;
                   oauth2Client.setCredentials({ access_token: accessToken });
                   var oauth2 = google.oauth2({
@@ -138,8 +134,8 @@ export const backendConfig = (): AuthConfig => {
                   });
                   if (input.userContext.isSignUp) {
                     const mailjet = new Mailjet({
-                      apiKey: process.env.SMTP_USER || "your-api-key",
-                      apiSecret: process.env.SMTP_PASS || "your-api-secret",
+                      apiKey: process.env.SMTP_USER,
+                      apiSecret: process.env.SMTP_PASS,
                     });
                     mailjet.post;
                   }
@@ -152,22 +148,24 @@ export const backendConfig = (): AuthConfig => {
           },
         },
         providers: [
-          // We have provided you with development keys which you can use for testing.
-          // IMPORTANT: Please replace them with your own OAuth keys for production use.
-          ThirdPartyPasswordlessNode.Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            scope: ["profile", "email"],
-          }),
+          {
+            config: {
+              thirdPartyId: "google",
+              clients: [
+                {
+                  clientId: process.env.GOOGLE_CLIENT_ID!,
+                  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+                },
+              ],
+            },
+          },
         ],
         contactMethod: "EMAIL",
         flowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
       }),
-      SessionNode.init({
-        getTokenTransferMethod: () => "header",
-        jwt: {
-          enable: true,
-        },
+      Session.init({
+        exposeAccessTokenToFrontendInCookieBasedAuth: true,
+        useDynamicAccessTokenSigningKey: false,
         override: {
           functions: function (originalImplementation) {
             return {
@@ -190,9 +188,8 @@ export const backendConfig = (): AuthConfig => {
       }),
 
       UserMetadata.init({}),
-      Dashboard.init({
-        apiKey: process.env.SUPERTOKENS_API_KEY || "",
-      }),
+      Dashboard.init(),
+      UserRoles.init(),
     ],
     isInServerlessEnv: true,
   };

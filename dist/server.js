@@ -17,14 +17,13 @@ const express_2 = require("supertokens-node/framework/express");
 const supertokens_node_1 = __importDefault(require("supertokens-node"));
 const verify_session_1 = require("./verify_session");
 const dotenv_1 = __importDefault(require("dotenv"));
-const config_1 = require("./config");
+const supertokens_config_1 = require("./supertokens_config");
 const express_actuator_1 = __importDefault(require("express-actuator"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const twilio_http_1 = require("./twilio_http");
 dotenv_1.default.config();
-supertokens_node_1.default.init((0, config_1.backendConfig)());
+supertokens_node_1.default.init((0, supertokens_config_1.backendConfig)());
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)({
@@ -36,8 +35,9 @@ app.use((0, cors_1.default)({
 app.use((0, express_2.middleware)()); // supertokens middleware creates /api path
 app.use((0, morgan_1.default)("combined")); //http logging
 app.use((0, express_actuator_1.default)()); //health check
-app.post("/start_verification", (0, verify_session_1.verifySession)(), (0, twilio_http_1.setNumber)(), (0, twilio_http_1.initiateCall)());
-app.post("/verify_code", (0, verify_session_1.verifySession)(), (0, twilio_http_1.setNumber)(), (0, twilio_http_1.verifyCode)());
+app.post("/test", (0, verify_session_1.verifySession)(), function (req, res) {
+    res.send("Hello there! \n" + req.user + " \n" + req.verificationType);
+});
 app.use((0, express_2.errorHandler)());
 const port = process.env.PORT;
 app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {

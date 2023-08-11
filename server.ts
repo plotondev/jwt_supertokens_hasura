@@ -12,7 +12,7 @@ import morgon from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
 
-import { initiateCall, setNumber, verifyCode } from "./twilio_http";
+import { setNumber } from "./twilio_http";
 
 dotenv.config();
 
@@ -33,9 +33,10 @@ app.use(SupertokensMiddleware()); // supertokens middleware creates /api path
 app.use(morgon("combined")); //http logging
 app.use(actuator()); //health check
 
-app.post("/start_verification", verifySession(), setNumber(), initiateCall());
+app.post("/test", verifySession(), function (req, res) {
+  res.send("Hello there! \n" + req.user + " \n" + req.verificationType);
+});
 
-app.post("/verify_code", verifySession(), setNumber(), verifyCode());
 app.use(errorHandler());
 const port = process.env.PORT;
 app.listen(port, async () => {
