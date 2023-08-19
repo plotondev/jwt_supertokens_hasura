@@ -7,6 +7,8 @@ import UserRoles from "supertokens-node/recipe/userroles";
 import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 import Mailjet from "node-mailjet";
+import { getTokens, saveTokens } from "./oauthTokens";
+import { json } from "body-parser";
 
 export const backendConfig = (): AuthConfig => {
   const appInfo = {
@@ -51,6 +53,7 @@ export const backendConfig = (): AuthConfig => {
           functions: (originalImplementation) => {
             return {
               ...originalImplementation,
+
               sendEmail: async function ({
                 codeLifetime, // amount of time the code is alive for (in MS)
                 email, //user email
@@ -70,7 +73,8 @@ export const backendConfig = (): AuthConfig => {
               },
               consumeCode: async function (input) {
                 let resp = await originalImplementation.consumeCode(input);
-                if (resp.status === "OK" && resp.createdNewUser) {
+
+                if (resp.status === "OK") {
                   /*
                    * This is called during the consume code API,
                    * but before calling the createNewSession function.
@@ -87,7 +91,7 @@ export const backendConfig = (): AuthConfig => {
                    * (which will be called next)
                    * to not create a new session in case input.userContext.isSignUp == true
                    */
-                  input.userContext.isSignUp = true;
+                  input.userContext.isSignUp = resp.createdNewUser;
                 }
                 return resp;
               },
@@ -112,26 +116,36 @@ export const backendConfig = (): AuthConfig => {
                 if (response.status === "OK") {
                   // In this example we are using Google as our provider
 
-                  let accessToken = response.oAuthTokens.access_token;
-                  let userId = response.user.id;
-                  oauth2Client.setCredentials({ access_token: accessToken });
-                  var oauth2 = google.oauth2({
-                    auth: oauth2Client,
-                    version: "v2",
-                  });
-                  oauth2.userinfo.get(function (err, res) {
-                    if (err) {
-                      console.log(err);
-                    } else {
-                      UserMetadata.updateUserMetadata(userId, {
-                        first_name: res?.data.given_name,
-                        last_name: res?.data.family_name,
-                        picture: res?.data.picture,
-                        name: res?.data.name,
-                        email: res?.data.email,
-                      });
-                    }
-                  });
+                  saveTokens(
+                    JSON.stringify(response.oAuthTokens),
+                    response.user.id,
+                    input.provider.id
+                  );
+
+                  if (input.provider.id === "google") {
+                    let accessToken = response.oAuthTokens.access_token;
+                    let userId = response.user.id;
+
+                    oauth2Client.setCredentials({ access_token: accessToken });
+                    var oauth2 = google.oauth2({
+                      auth: oauth2Client,
+                      version: "v2",
+                    });
+                    oauth2.userinfo.get(function (err, res) {
+                      if (err) {
+                        console.log(err);
+                      } else {
+                        UserMetadata.updateUserMetadata(userId, {
+                          first_name: res?.data.given_name,
+                          last_name: res?.data.family_name,
+                          picture: res?.data.picture,
+                          name: res?.data.name,
+                          email: res?.data.email,
+                        });
+                      }
+                    });
+                  }
+
                   if (input.userContext.isSignUp) {
                     const mailjet = new Mailjet({
                       apiKey: process.env.SMTP_USER,
@@ -159,6 +173,17 @@ export const backendConfig = (): AuthConfig => {
               ],
             },
           },
+          {
+            config: {
+              thirdPartyId: "github",
+              clients: [
+                {
+                  clientId: process.env.GITHUB_CLIENT_ID!,
+                  clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+                },
+              ],
+            },
+          },
         ],
         contactMethod: "EMAIL",
         flowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -166,6 +191,7 @@ export const backendConfig = (): AuthConfig => {
       Session.init({
         exposeAccessTokenToFrontendInCookieBasedAuth: true,
         useDynamicAccessTokenSigningKey: false,
+        getTokenTransferMethod: () => "header",
         override: {
           functions: function (originalImplementation) {
             return {

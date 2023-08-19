@@ -16,3 +16,4 @@ benchmarks/graphs
 
 
 .env
+.env.test
