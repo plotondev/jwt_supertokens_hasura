@@ -52,30 +52,31 @@ export const saveTokens = async (
   }
 };
 
-export const getTokens = async (userId: string, oauthProvider: string) => {
-  let res: any;
-  try {
-    const client = await pool.connect();
-    const sql = `SELECT iv,key,oauth_data FROM oauth2_tokens WHERE user_id = $1 AND oauth_provider = $2`;
-    res = await client.query(sql, [userId, oauthProvider]);
-  } catch (e) {
-    console.log(e);
-    console.log("error in getTokens");
-  }
+//example of how to get oauth2 tokens
+// export const getTokens = async (userId: string, oauthProvider: string) => {
+//   let res: any;
+//   try {
+//     const client = await pool.connect();
+//     const sql = `SELECT iv,key,oauth_data FROM oauth2_tokens WHERE user_id = $1 AND oauth_provider = $2`;
+//     res = await client.query(sql, [userId, oauthProvider]);
+//   } catch (e) {
+//     console.log(e);
+//     console.log("error in getTokens");
+//   }
 
-  console.log(res.rows[0]);
+//   console.log(res.rows[0]);
 
-  let iv = Buffer.from(res.rows[0]["iv"], "hex");
-  let encryptedText = Buffer.from(res.rows[0]["oauth_data"], "hex");
+//   let iv = Buffer.from(res.rows[0]["iv"], "hex");
+//   let encryptedText = Buffer.from(res.rows[0]["oauth_data"], "hex");
 
-  let decipher = crypto.createDecipheriv(
-    algorithm,
-    Buffer.from(res.rows[0]["key"], "hex"),
-    iv
-  );
+//   let decipher = crypto.createDecipheriv(
+//     algorithm,
+//     Buffer.from(res.rows[0]["key"], "hex"),
+//     iv
+//   );
 
-  let decrypted = decipher.update(encryptedText);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
+//   let decrypted = decipher.update(encryptedText);
+//   decrypted = Buffer.concat([decrypted, decipher.final()]);
 
-  return decrypted.toString();
-};
+//   return decrypted.toString();
+// };

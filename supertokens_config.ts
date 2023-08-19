@@ -7,8 +7,7 @@ import UserRoles from "supertokens-node/recipe/userroles";
 import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 import Mailjet from "node-mailjet";
-import { getTokens, saveTokens } from "./oauthTokens";
-import { json } from "body-parser";
+import { saveTokens } from "./oauthTokens";
 
 export const backendConfig = (): AuthConfig => {
   const appInfo = {
@@ -116,6 +115,7 @@ export const backendConfig = (): AuthConfig => {
                 if (response.status === "OK") {
                   // In this example we are using Google as our provider
 
+                  //Save oauth2 tokens
                   saveTokens(
                     JSON.stringify(response.oAuthTokens),
                     response.user.id,

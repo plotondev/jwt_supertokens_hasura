@@ -1,5 +1,5 @@
 {
-  "name": "c2c_jwt",
+  "name": "jwt_supertokens_hasura",
   "version": "1.0.0",
   "description": "JWT package for hasura and supertokens authentication sync",
   "main": "server.ts",
