@@ -4,15 +4,12 @@ import {
   errorHandler,
 } from "supertokens-node/framework/express";
 import SuperTokens from "supertokens-node";
-import { verifySession } from "./verify_session";
 import dotenv from "dotenv";
 import { backendConfig } from "./supertokens_config";
 import actuator from "express-actuator";
 import morgon from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
-
-import { setNumber } from "./twilio_http";
 
 dotenv.config();
 
@@ -32,10 +29,6 @@ app.use(
 app.use(SupertokensMiddleware()); // supertokens middleware creates /api path
 app.use(morgon("combined")); //http logging
 app.use(actuator()); //health check
-
-app.post("/test", verifySession(), function (req, res) {
-  res.send("Hello there! \n" + req.user + " \n" + req.verificationType);
-});
 
 app.use(errorHandler());
 const port = process.env.PORT;
