@@ -6,6 +6,7 @@ COPY *.ts .
 COPY *.js .
 COPY types .
 COPY *.json .
+COPY db .
 
 RUN npm install
 RUN npm run build

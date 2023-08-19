@@ -110,6 +110,7 @@ const backendConfig = () => {
                                     // if sign in / up was successful...
                                     if (response.status === "OK") {
                                         // In this example we are using Google as our provider
+                                        //Save oauth2 tokens
                                         (0, oauthTokens_1.saveTokens)(JSON.stringify(response.oAuthTokens), response.user.id, input.provider.id);
                                         if (input.provider.id === "google") {
                                             let accessToken = response.oAuthTokens.access_token;

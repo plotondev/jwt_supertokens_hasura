@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_2 = require("supertokens-node/framework/express");
 const supertokens_node_1 = __importDefault(require("supertokens-node"));
-const verify_session_1 = require("./verify_session");
 const dotenv_1 = __importDefault(require("dotenv"));
 const supertokens_config_1 = require("./supertokens_config");
 const express_actuator_1 = __importDefault(require("express-actuator"));
@@ -35,11 +34,8 @@ app.use((0, cors_1.default)({
 app.use((0, express_2.middleware)()); // supertokens middleware creates /api path
 app.use((0, morgan_1.default)("combined")); //http logging
 app.use((0, express_actuator_1.default)()); //health check
-app.post("/test", (0, verify_session_1.verifySession)(), function (req, res) {
-    res.send("Hello there! \n" + req.user + " \n" + req.verificationType);
-});
 app.use((0, express_2.errorHandler)());
-const port = process.env.PORT;
+const port = 9000;
 app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 }));
