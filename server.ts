@@ -31,7 +31,7 @@ app.use(morgon("combined")); //http logging
 app.use(actuator()); //health check
 
 app.use(errorHandler());
-const port = process.env.PORT;
+const port = 9000;
 app.listen(port, async () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
