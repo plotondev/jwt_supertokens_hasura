@@ -3,8 +3,8 @@ WORKDIR /usr/src/app
 
 COPY *.ts .
 COPY *.json .
-COPY types .
-COPY db .
+COPY ./types ./types
+COPY ./db ./db
 
 RUN npm install
 RUN npm run build

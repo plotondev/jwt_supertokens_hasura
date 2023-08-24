@@ -27,28 +27,28 @@ const saveTokens = (data, userId, oauthProvider) => __awaiter(void 0, void 0, vo
         client = yield db_1.default.connect();
         // Check if a record exists
         const checkSql = `SELECT 1 FROM oauth2_tokens WHERE user_id = $1 AND oauth_provider = $2`;
-        const result = yield client.query(checkSql, [userId, oauthProvider]);
+        const result = yield (client === null || client === void 0 ? void 0 : client.query(checkSql, [userId, oauthProvider]));
         if (result.rowCount > 0) {
             // Update if exists
             const updateSql = `UPDATE oauth2_tokens SET iv = $1, key = $2, oauth_data = $3 WHERE user_id = $4 AND oauth_provider = $5`;
-            yield client.query(updateSql, [
+            yield (client === null || client === void 0 ? void 0 : client.query(updateSql, [
                 iv.toString("hex"),
                 key.toString("hex"),
                 encrypted.toString("hex"),
                 userId,
                 oauthProvider,
-            ]);
+            ]));
         }
         else {
             // Insert if doesn't exist
             const insertSql = `INSERT INTO oauth2_tokens (user_id, iv, key, oauth_data, oauth_provider) VALUES ($1, $2, $3, $4, $5)`;
-            yield client.query(insertSql, [
+            yield (client === null || client === void 0 ? void 0 : client.query(insertSql, [
                 userId,
                 iv.toString("hex"),
                 key.toString("hex"),
                 encrypted.toString("hex"),
                 oauthProvider,
-            ]);
+            ]));
         }
     }
     catch (e) {

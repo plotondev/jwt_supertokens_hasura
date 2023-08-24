@@ -12,8 +12,8 @@ import { saveTokens } from "./oauthTokens";
 export const backendConfig = (): AuthConfig => {
   const appInfo = {
     appName: process.env.APP_NAME!,
-    websiteDomain: process.env.APP_URL!,
-    apiDomain: process.env.APP_URL!,
+    websiteDomain: process.env.PLOTON_CLIENT_URL!,
+    apiDomain: process.env.PLOTON_CLIENT_URL!,
     apiBasePath: "/api/",
   };
 

@@ -25,8 +25,8 @@ const oauthTokens_1 = require("./oauthTokens");
 const backendConfig = () => {
     const appInfo = {
         appName: process.env.APP_NAME,
-        websiteDomain: process.env.APP_URL,
-        apiDomain: process.env.APP_URL,
+        websiteDomain: process.env.PLOTON_CLIENT_URL,
+        apiDomain: process.env.PLOTON_CLIENT_URL,
         apiBasePath: "/api/",
     };
     let OAuth2 = googleapis_1.google.auth.OAuth2;
