@@ -4,14 +4,11 @@ import {
   errorHandler,
 } from "supertokens-node/framework/express";
 import SuperTokens from "supertokens-node";
-import dotenv from "dotenv";
 import { backendConfig } from "./supertokens_config";
 import actuator from "express-actuator";
 import morgon from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
-
-dotenv.config();
 
 SuperTokens.init(backendConfig());
 

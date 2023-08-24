@@ -22,12 +22,12 @@ export const saveTokens = async (
 
     // Check if a record exists
     const checkSql = `SELECT 1 FROM oauth2_tokens WHERE user_id = $1 AND oauth_provider = $2`;
-    const result = await client.query(checkSql, [userId, oauthProvider]);
+    const result = await client?.query(checkSql, [userId, oauthProvider]);
 
     if (result.rowCount > 0) {
       // Update if exists
       const updateSql = `UPDATE oauth2_tokens SET iv = $1, key = $2, oauth_data = $3 WHERE user_id = $4 AND oauth_provider = $5`;
-      await client.query(updateSql, [
+      await client?.query(updateSql, [
         iv.toString("hex"),
         key.toString("hex"),
         encrypted.toString("hex"),
@@ -37,7 +37,7 @@ export const saveTokens = async (
     } else {
       // Insert if doesn't exist
       const insertSql = `INSERT INTO oauth2_tokens (user_id, iv, key, oauth_data, oauth_provider) VALUES ($1, $2, $3, $4, $5)`;
-      await client.query(insertSql, [
+      await client?.query(insertSql, [
         userId,
         iv.toString("hex"),
         key.toString("hex"),
