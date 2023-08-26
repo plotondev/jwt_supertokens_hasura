@@ -7,8 +7,11 @@ export const getWorkspaceRoleForUser = async (userID: string) => {
   return { workspace, role };
 };
 
-export const setWorkspaceForUser = async (userID: string) => {
-  const workspace = await redis.hget(`users:${userID}`, "selected-wkspc");
-  const role = await redis.hget(`users:${userID}`, `wkspc-${workspace}:role`);
-  return { workspace, role };
+export const setWorkspaceForUser = async (
+  userID: string,
+  workspace: string
+) => {
+  await redis.hset(`users:${userID}`, "selected-wkspc", workspace);
+
+  return;
 };

@@ -10,10 +10,9 @@ import morgon from "morgan";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { SessionRequest } from "supertokens-node/framework/express";
-import UserRoles from "supertokens-node/recipe/userroles";
-import { Error as STError } from "supertokens-node/recipe/session";
 import { verifySession } from "./verify_session";
 import Session from "supertokens-node/recipe/session";
+import { setWorkspaceForUser } from "./db/redis";
 
 SuperTokens.init(backendConfig());
 
@@ -34,11 +33,18 @@ app.use(actuator()); //health check
 
 app.use(errorHandler());
 
-app.post("/update-blog", verifySession(), async (req: SessionRequest, res) => {
+app.post("/wkspc", verifySession(), async (req: SessionRequest, res) => {
+  const { workspace } = req.body;
+  if (!workspace) {
+    return res
+      .status(400)
+      .send({ success: false, message: "Workspace is required" });
+  }
+  await setWorkspaceForUser(req.user!, workspace);
   await Session.createNewSession(req, res, "public", req.user!);
-  // user is an admin..
-  res.send("success");
+  return res.status(200).send({ success: true });
 });
+
 const port = process.env.PORT || 9000;
 app.listen(port, async () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
