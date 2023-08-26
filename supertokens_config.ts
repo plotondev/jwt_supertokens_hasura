@@ -4,10 +4,12 @@ import Session from "supertokens-node/recipe/session";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import UserMetadata from "supertokens-node/recipe/usermetadata";
 import UserRoles from "supertokens-node/recipe/userroles";
+import Multitenancy from "supertokens-node/recipe/multitenancy";
 import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 import Mailjet from "node-mailjet";
 import { saveTokens } from "./oauthTokens";
+import { getWorkspaceRoleForUser } from "./db/redis";
 
 export const backendConfig = (): AuthConfig => {
   const appInfo = {
@@ -70,6 +72,81 @@ export const backendConfig = (): AuthConfig => {
                 console.log(urlWithLinkCode);
                 console.log(userInputCode);
               },
+              thirdPartySignInUp: async function (input) {
+                // TODO: Some pre sign in / up logic
+
+                let response = await originalImplementation.thirdPartySignInUp(
+                  input
+                );
+
+                if (response.status === "OK" && response.createdNewUser) {
+                  //Save oauth2 tokens
+                  saveTokens(
+                    JSON.stringify(response.oAuthTokens),
+                    response.user.id,
+                    input.thirdPartyId
+                  );
+
+                  let { id: userId, email: userEmail } = response.user;
+
+                  //add user to public tenant
+                  await UserRoles.addRoleToUser("public", userId, "user");
+
+                  // ----- default personal workspace
+                  let resp = await Multitenancy.createOrUpdateTenant(userId, {
+                    passwordlessEnabled: true,
+                    thirdPartyEnabled: true,
+                  });
+                  // if (resp.createdNew) {
+                  //   // new tenant was created
+                  //   await UserRoles.addRoleToUser(userId, userId, "admin");
+                  // } else {
+                  //   // existing tenant's config was modified.
+                  // }
+                  await UserRoles.addRoleToUser(userId, userId, "admin");
+                  // ----- default personal workspace end
+
+                  // This is the response from the OAuth 2 provider that contains their tokens or user info.
+                  let providerAccessToken =
+                    response.oAuthTokens["access_token"];
+
+                  if (input.thirdPartyId === "google") {
+                    oauth2Client.setCredentials({
+                      access_token: providerAccessToken,
+                    });
+                    var oauth2 = google.oauth2({
+                      auth: oauth2Client,
+                      version: "v2",
+                    });
+                    oauth2.userinfo.get(function (err, res) {
+                      if (err) {
+                        console.log(err);
+                      } else {
+                        UserMetadata.updateUserMetadata(userId, {
+                          first_name: res?.data.given_name,
+                          last_name: res?.data.family_name,
+                          picture: res?.data.picture,
+                          name: res?.data.name,
+                          email: res?.data.email,
+                        });
+                      }
+                    });
+                  }
+
+                  if (response.createdNewUser) {
+                    // TODO: Post sign up logic
+                    const mailjet = new Mailjet({
+                      apiKey: process.env.SMTP_USER,
+                      apiSecret: process.env.SMTP_PASS,
+                    });
+                    mailjet.post;
+                  } else {
+                    // TODO: Post sign in logic
+                  }
+                }
+
+                return response;
+              },
               consumeCode: async function (input) {
                 let resp = await originalImplementation.consumeCode(input);
 
@@ -93,70 +170,6 @@ export const backendConfig = (): AuthConfig => {
                   input.userContext.isSignUp = resp.createdNewUser;
                 }
                 return resp;
-              },
-            };
-          },
-          apis: (originalImplementation) => {
-            return {
-              ...originalImplementation,
-
-              // we override the thirdparty sign in / up API
-              thirdPartySignInUpPOST: async function (input) {
-                if (
-                  originalImplementation.thirdPartySignInUpPOST === undefined
-                ) {
-                  throw Error("Should never come here");
-                }
-
-                let response =
-                  await originalImplementation.thirdPartySignInUpPOST(input);
-
-                // if sign in / up was successful...
-                if (response.status === "OK") {
-                  // In this example we are using Google as our provider
-
-                  //Save oauth2 tokens
-                  saveTokens(
-                    JSON.stringify(response.oAuthTokens),
-                    response.user.id,
-                    input.provider.id
-                  );
-
-                  if (input.provider.id === "google") {
-                    let accessToken = response.oAuthTokens.access_token;
-                    let userId = response.user.id;
-
-                    oauth2Client.setCredentials({ access_token: accessToken });
-                    var oauth2 = google.oauth2({
-                      auth: oauth2Client,
-                      version: "v2",
-                    });
-                    oauth2.userinfo.get(function (err, res) {
-                      if (err) {
-                        console.log(err);
-                      } else {
-                        UserMetadata.updateUserMetadata(userId, {
-                          first_name: res?.data.given_name,
-                          last_name: res?.data.family_name,
-                          picture: res?.data.picture,
-                          name: res?.data.name,
-                          email: res?.data.email,
-                        });
-                      }
-                    });
-                  }
-
-                  if (input.userContext.isSignUp) {
-                    const mailjet = new Mailjet({
-                      apiKey: process.env.SMTP_USER,
-                      apiSecret: process.env.SMTP_PASS,
-                    });
-                    mailjet.post;
-                  }
-                  // TODO: ...
-                }
-
-                return response;
               },
             };
           },
@@ -190,19 +203,22 @@ export const backendConfig = (): AuthConfig => {
       }),
       Session.init({
         exposeAccessTokenToFrontendInCookieBasedAuth: true,
-        useDynamicAccessTokenSigningKey: false,
-        getTokenTransferMethod: () => "header",
         override: {
           functions: function (originalImplementation) {
             return {
               ...originalImplementation,
               createNewSession: async function (input) {
+                //get workspace and role for user
+                const { workspace, role } = await getWorkspaceRoleForUser(
+                  input.userId
+                );
                 input.accessTokenPayload = {
                   ...input.accessTokenPayload,
                   "https://hasura.io/jwt/claims": {
                     "x-hasura-user-id": input.userId,
-                    "x-hasura-default-role": "user",
-                    "x-hasura-allowed-roles": ["user"],
+                    "x-hasura-org-id": workspace || "public",
+                    "x-hasura-default-role": role || "user",
+                    "x-hasura-allowed-roles": [role || "user"],
                   },
                 };
 
@@ -212,10 +228,8 @@ export const backendConfig = (): AuthConfig => {
           },
         },
       }),
-
       UserMetadata.init({}),
-      Dashboard.init(),
-      UserRoles.init(),
+      Dashboard.init({}),
     ],
     isInServerlessEnv: true,
   };

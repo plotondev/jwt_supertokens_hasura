@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { PoolClient } from "pg";
-import pool from "./db";
+import { pg } from "./db/pg";
 
 const algorithm = "aes-256-cbc";
 
@@ -18,7 +18,7 @@ export const saveTokens = async (
 
   let client: PoolClient | undefined;
   try {
-    client = await pool.connect();
+    client = await pg.connect();
 
     // Check if a record exists
     const checkSql = `SELECT 1 FROM oauth2_tokens WHERE user_id = $1 AND oauth_provider = $2`;
