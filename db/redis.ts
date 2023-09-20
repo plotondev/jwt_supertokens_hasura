@@ -15,3 +15,8 @@ export const setWorkspaceForUser = async (
 
   return;
 };
+
+export const createWorkspace = async (workspace: string) => {
+  await redis.hset(`workspaces:${workspace}`, workspace);
+  return;
+};

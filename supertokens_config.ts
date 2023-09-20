@@ -214,11 +214,11 @@ export const backendConfig = (): AuthConfig => {
                 );
                 input.accessTokenPayload = {
                   ...input.accessTokenPayload,
-                  "https://hasura.io/jwt/claims": {
-                    "x-hasura-user-id": input.userId,
-                    "x-hasura-org-id": workspace || "public",
-                    "x-hasura-default-role": role || "user",
-                    "x-hasura-allowed-roles": [role || "user"],
+                  "claims": {
+                    "x-user-id": input.userId,
+                    "x-org-id": workspace || "public",
+                    "x-default-role": role || "user",
+                    "x-allowed-roles": [role || "user"],
                   },
                 };
 
