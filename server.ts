@@ -11,8 +11,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { SessionRequest } from "supertokens-node/framework/express";
 import { verifySession } from "./verify_session";
-import Session from "supertokens-node/recipe/session";
-import { setWorkspaceForUser } from "./db/redis";
 
 SuperTokens.init(backendConfig());
 
@@ -37,18 +35,6 @@ app.use(errorHandler());
 //The return sets a header as userID which is passed on to proxy servers
 app.post("/",verifySession(), async (req: SessionRequest, res) => {
   return res.header("X-Auth-Request-User",req.user).status(200).send();
-});
-
-app.post("/wkspc", verifySession(), async (req: SessionRequest, res) => {
-  const { workspace } = req.body;
-  if (!workspace) {
-    return res
-      .status(400)
-      .send({ success: false, message: "Workspace is required" });
-  }
-  await setWorkspaceForUser(req.user!, workspace);
-  await Session.createNewSession(req, res, "public", req.user!);
-  return res.status(200).send({ success: true });
 });
 
 const port = process.env.PORT || 9000;

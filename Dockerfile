@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:20-alpine
+FROM --platform=linux/amd64 oven/bun
 WORKDIR /usr/src/app
 
 COPY *.ts .
@@ -6,7 +6,6 @@ COPY *.json .
 COPY ./types ./types
 COPY ./db ./db
 
-RUN npm install
-RUN npm run build
+RUN bun install
 
 CMD [ "npm", "start" ]

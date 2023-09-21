@@ -9,7 +9,6 @@ import { google } from "googleapis";
 import { AuthConfig } from "./interfaces";
 import Mailjet from "node-mailjet";
 import { saveTokens } from "./oauthTokens";
-import { getWorkspaceRoleForUser } from "./db/redis";
 
 export const backendConfig = (): AuthConfig => {
   const appInfo = {
@@ -79,30 +78,22 @@ export const backendConfig = (): AuthConfig => {
                   input
                 );
 
+                //Save oauth2 tokens of selected provider
+                saveTokens(
+                  JSON.stringify(response.oAuthTokens),
+                  response.user.id,
+                  input.thirdPartyId
+                );
+                let { id: userId, email: userEmail } = response.user;
                 if (response.status === "OK" && response.createdNewUser) {
-                  //Save oauth2 tokens
-                  saveTokens(
-                    JSON.stringify(response.oAuthTokens),
-                    response.user.id,
-                    input.thirdPartyId
-                  );
-
-                  let { id: userId, email: userEmail } = response.user;
-
                   //add user to public tenant
                   await UserRoles.addRoleToUser("public", userId, "user");
 
                   // ----- default personal workspace
-                  let resp = await Multitenancy.createOrUpdateTenant(userId, {
+                  await Multitenancy.createOrUpdateTenant(userId, {
                     passwordlessEnabled: true,
                     thirdPartyEnabled: true,
                   });
-                  // if (resp.createdNew) {
-                  //   // new tenant was created
-                  //   await UserRoles.addRoleToUser(userId, userId, "admin");
-                  // } else {
-                  //   // existing tenant's config was modified.
-                  // }
                   await UserRoles.addRoleToUser(userId, userId, "admin");
                   // ----- default personal workspace end
 
@@ -143,6 +134,15 @@ export const backendConfig = (): AuthConfig => {
                   } else {
                     // TODO: Post sign in logic
                   }
+                }
+                const roles = await UserRoles.getRolesForUser(input.tenantId, userId);
+                input.userContext = {
+                  isSignup: response.createdNewUser,
+                  userId,
+                  userEmail,
+                  tenantId: input.tenantId,
+                  roles: roles.roles,
+                  provider:input.thirdPartyId
                 }
 
                 return response;
@@ -202,23 +202,24 @@ export const backendConfig = (): AuthConfig => {
         flowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
       }),
       Session.init({
-        exposeAccessTokenToFrontendInCookieBasedAuth: true,
+        exposeAccessTokenToFrontendInCookieBasedAuth: false,
         override: {
           functions: function (originalImplementation) {
             return {
               ...originalImplementation,
               createNewSession: async function (input) {
                 //get workspace and role for user
-                const { workspace, role } = await getWorkspaceRoleForUser(
-                  input.userId
-                );
+                
                 input.accessTokenPayload = {
                   ...input.accessTokenPayload,
                   "claims": {
                     "x-user-id": input.userId,
-                    "x-org-id": workspace || "public",
-                    "x-default-role": role || "user",
-                    "x-allowed-roles": [role || "user"],
+                    "x-tenant-id": input.tenantId,
+                    "x-default-role": "user",
+                    "x-user-email": input.userContext.userEmail,
+                    "x-allowed-roles": input.userContext.roles,
+                    "x-is-signup": input.userContext.isSignup,
+                    "x-provider": input.userContext.provider
                   },
                 };
 
