@@ -8,4 +8,4 @@ COPY ./db ./db
 
 RUN bun install
 
-CMD [ "npm", "start" ]
+CMD [ "bun", "start" ]

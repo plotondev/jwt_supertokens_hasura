@@ -231,6 +231,7 @@ export const backendConfig = (): AuthConfig => {
       }),
       UserMetadata.init({}),
       Dashboard.init({}),
+      UserRoles.init({})
     ],
     isInServerlessEnv: true,
   };
