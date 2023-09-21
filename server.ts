@@ -33,6 +33,12 @@ app.use(actuator()); //health check
 
 app.use(errorHandler());
 
+//This is for k8 ingress to perform auth on Authorization header.
+//The return sets a header as userID which is passed on to proxy servers
+app.post("/",verifySession(), async (req: SessionRequest, res) => {
+  return res.header("X-Auth-Request-User",req.user).status(200).send();
+});
+
 app.post("/wkspc", verifySession(), async (req: SessionRequest, res) => {
   const { workspace } = req.body;
   if (!workspace) {
