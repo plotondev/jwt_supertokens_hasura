@@ -36,6 +36,9 @@ app.use(errorHandler());
 app.post("/",verifySession(), async (req: SessionRequest, res) => {
   return res.header("X-Auth-Request-User",req.user).status(200).send();
 });
+app.post("/test", verifySession(), function (req, res) {
+  res.send("Hello there! \n" + req.user + " \n" + req.verificationType);
+});
 
 const port = process.env.PORT || 9000;
 app.listen(port, async () => {

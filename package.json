@@ -21,6 +21,7 @@
     "graphql-request": "^6.0.0",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.0",
+    "jwks-client": "^2.0.2",
     "jwks-rsa": "^3.0.1",
     "node-mailjet": "^6.0.2",
     "pg": "^8.11.3",

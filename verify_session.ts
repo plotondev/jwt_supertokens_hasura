@@ -5,9 +5,12 @@ import jwksClient from "jwks-rsa";
 export const verifySession = () => {
   var client = jwksClient({
     jwksUri: process.env.JWKS_URI as string,
+    requestHeaders: {}, // Optional
+      timeout: 30000 // Defaults to 30s
   });
   function getKey(header: JwtHeader, callback: SigningKeyCallback) {
     client.getSigningKey(header.kid, function (err, key) {
+      console.log("KID:"+header.kid)
       var signingKey = key?.getPublicKey();
       callback(err, signingKey);
     });
